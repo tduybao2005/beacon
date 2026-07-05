@@ -62,6 +62,39 @@ arduino-cli upload --fqbn adafruit:nrf52:pca10056 -p /dev/ttyACM0 beacon-e73/bea
 > qua J-Link (`nrfjprog --program beacon_e73.ino.hex --sectorerase -f nrf52 --reset`).
 > **Không** dùng `--chiperase` ở bước này để không xóa mất bootloader.
 
+> **⚠️ BẮT BUỘC trước khi build: vá `variant.h` sang USE_LFRC.** Board E73 custom
+> KHÔNG có thạch anh 32.768kHz ngoài (LFXO) như board Adafruit gốc pca10056. Nếu build
+> với cấu hình mặc định (`USE_LFXO`), firmware compile/nạp OK (verify pass) nhưng
+> SoftDevice sẽ chờ mãi clock LF từ thạch anh không tồn tại → **radio BLE không bao giờ phát**.
+> Phải vá trong core đã cài trước khi compile:
+> ```bash
+> V=<đường-dẫn-arduino-data>/packages/adafruit/hardware/nrf52/1.7.0/variants/pca10056/variant.h
+> sed -i 's|^#define USE_LFXO.*|// #define USE_LFXO   // Board uses 32khz crystal for LF|' "$V"
+> sed -i 's|^// define USE_LFRC.*|#define USE_LFRC      // Board E73 custom: khong co thach anh 32.768kHz ngoai|' "$V"
+> ```
+> Xem thêm ghi chú build trong repo app: `threejs/beacon/e73-firmware-hex/README.md`.
+
+### Bước 3: Kích hoạt app qua bootloader settings page (BẮT BUỘC sau khi nạp qua SWD)
+
+Bootloader Adafruit 0.9.2 chỉ nhảy vào app nếu settings page ở `0xFF000` có `bank_0=0x01`.
+Nạp app qua SWD (bước 2) KHÔNG tự ghi cờ này — thiếu bước này thì **app không bao giờ chạy**
+dù `verify` ở bước nạp báo thành công (triệu chứng: nạp xong nhưng quét BLE không thấy gì).
+
+```bash
+printf '\x01\x00\x00\x00' > /tmp/settings_patch.bin
+openocd -f interface/jlink.cfg -c "transport select swd" -f target/nrf52.cfg -c "adapter speed 1000" \
+  -c "init" -c "halt" \
+  -c "flash write_image /tmp/settings_patch.bin 0xff000 bin" -c "reset run" -c "exit"
+```
+
+Sau khi nạp xong cả 3 bước (bootloader → app → settings page): **rút nguồn cắm lại thật sự**
+(power-cycle), không chỉ dựa vào `reset` của OpenOCD — một số bo mạch nạp không reset sạch
+toàn bộ peripheral. Quét bằng nRF Connect phải thấy tên `E73-0-B00-K00-F00-0000` (module trắng).
+
+Firmware hiện hành còn giữ mảng debug `dbgTrace` tại địa chỉ RAM cố định `0x20006004` — đọc trực
+tiếp qua SWD (không cần kết nối BLE) để chẩn đoán trạng thái nội bộ khi nghi ngờ app treo hoặc
+không vào được vòng lặp chính.
+
 ## 2. Các lần sau — Nạp OTA qua Bluetooth
 
 Sau lần nạp đầu, mọi cập nhật firmware đều qua BLE, không cần cắm dây:
