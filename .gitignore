@@ -1,0 +1,6 @@
+# Ket qua bien dich (sinh lai duoc bang make)
+beacon_bt53/build/
+
+# Rac he thong
+.DS_Store
+*.swp
