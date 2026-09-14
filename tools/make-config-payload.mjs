@@ -30,7 +30,7 @@ export function parseBeaconCode(s) {
   };
 }
 
-export function encodeE73Payload(code, txPower = -59, battery = 0xff) {
+export function encodeE73Payload(code, txPower = -69, battery = 0xff) {
   const buf = new Uint8Array(13);
   buf[0] = E73_MAGIC;
   buf[1] = E73_VERSION;
@@ -58,10 +58,10 @@ if (isMain) {
   const code = parseBeaconCode(codeStr);
   if (!code) {
     console.error('Cách dùng: node make-config-payload.mjs <code> [txPower] [battery]');
-    console.error('Ví dụ:    node make-config-payload.mjs 79048-B04-K00-F01-0001 -59 100');
+    console.error('Ví dụ:    node make-config-payload.mjs 79048-B04-K00-F01-0001 -69 100');
     process.exit(1);
   }
-  const txPower = txPowerArg !== undefined ? parseInt(txPowerArg, 10) : -59;
+  const txPower = txPowerArg !== undefined ? parseInt(txPowerArg, 10) : -69;
   const battery = batteryArg !== undefined ? parseInt(batteryArg, 10) : 0xff;
   const payload = encodeE73Payload(code, txPower, battery);
   console.log(`Code:    ${codeStr}`);

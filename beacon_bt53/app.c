@@ -54,7 +54,10 @@ static uint8_t payload[E73_PAYLOAD_LEN] = {
   0x00,                    // deptCode
   0x00,                    // floorCode
   0x00, 0x00,              // idx
-  (uint8_t)(-59),          // txPower @1m
+  // txPower @1m: do thuc te tren chinh module nay (TX +4dBm) bang Redmi Note 9S
+  // o ~1m -> trung vi -69 dBm tren 370 mau. Gia tri cu -59 la mac dinh chung cua
+  // iBeacon, chua tung do; lech 10 dB lam app tinh khoang cach gap ~3,2 lan.
+  (uint8_t)(-69),
   0xFF                     // battery khong ro
 };
 
