@@ -157,6 +157,30 @@ Khôi phục:
   -c "load ~/workspace/beacon/backup/e104-bt53a1-factory-firmware.bin 0x0"
 ```
 
+### Đưa ID về 0000 (module đã từng gán ID)
+
+**Chỉ nạp lại app KHÔNG đủ.** ID lưu trong NVM3, một vùng flash riêng
+(`0x4C000`–`0x56000`, 40 KB — lấy từ symbol `__nvm3Base`/`linker_nvm_end` trong
+`.out`) mà lệnh nạp app không đụng tới. Nạp app xong, lúc boot firmware tự đọc
+lại ID cũ từ NVM3 chứ không phải payload mặc định trong code.
+
+Phải xóa rõ vùng NVM3 trước, trong cùng phiên nạp app (tắt MPU 1 lần đủ dùng cho cả hai bước):
+
+```bash
+export LD_LIBRARY_PATH=~/silabs/SimplicityCommander-Linux/commander:$LD_LIBRARY_PATH
+APP_HEX=~/workspace/beacon/beacon_bt53/build/debug/beacon_bt53.hex
+
+./pyocd-venv/bin/pyocd cmd -t efr32bg22c112f352gm32 \
+  -c "halt" \
+  -c "write32 0xE000ED94 0x00000000" \
+  -c "erase 0x4C000 5" \
+  -c "load $APP_HEX"
+```
+
+`erase ADDR COUNT` của pyOCD: `COUNT` là **số trang** (8 KB/trang), không phải
+byte — 40 KB = 5 trang. Dùng nhầm byte (`erase 0x4C000 0xA000`) sẽ báo lỗi địa chỉ
+ngoài vùng nhớ.
+
 ## 7. Gán / cập nhật ID qua BLE
 
 Giống hệt bản E73 — service `E7300001-8CB0-4E2A-9C6D-6E73BEAC0001`,
