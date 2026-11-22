@@ -6,6 +6,72 @@ nên app đọc beacon (`BeaconCode.ts`) không phải sửa gì.
 
 > Bản E73 cũ xem `FLASHING.md`. Hai module dùng chip khác hãng nên toolchain khác hoàn toàn.
 
+## 0. Tổng quan mã nguồn firmware
+
+Thư mục `beacon_bt53/` là project Simplicity Studio (SLC) chuẩn, sinh ra từ template
+"Bluetooth - SoC Empty". Chỉ các file sau được tùy biến — phần còn lại là code khung do SDK
+sinh, không đụng vào:
+
+| File | Vai trò |
+|---|---|
+| `app.c` | **File chính** — toàn bộ logic beacon: build gói quảng bá, đọc/ghi NVM3, xử lý sự kiện BLE. |
+| `app.h` | Prototype cho hook baremetal (`app_init_bt`, `app_proceed`, ...) — sinh tự động, không sửa. |
+| `app_bm.c` | Lớp tương thích baremetal (semaphore giữa vòng lặp chính và ngắt) — code khung SDK. |
+| `main.c` | `main()` chuẩn SDK: `sl_main_init()` → `app_init()` → vòng lặp `sl_main_process_action()` + `app_process_action()`. |
+| `config/btconf/gatt_configuration.btconf` | GATT DB dạng XML: dịch vụ `Beacon Config` (`E7300001-...`) + characteristic `beacon_config` (`E7300002-...`, 13 byte, đọc/ghi không cần bond), cộng các dịch vụ chuẩn (Generic Access, Device Information, OTA). |
+| `beacon_bt53.slcp` | Khai báo chip (`EFR32BG22C112F352GM32`) và software component (`bluetooth_stack`, `nvm3_default`, `in_place_ota_dfu`, `mpu`, ...) — sửa file này khi cần thêm/bớt tính năng SDK. |
+| `sl_gatt_service_device_information_override.c` | Override chuỗi Manufacturer/Model trong Device Information — không ảnh hưởng hành vi beacon. |
+| `autogen/` | Do `slc generate` sinh ra (linker script, `gatt_db.c/h`, event handler...) — **không sửa tay**, bị ghi đè mỗi lần generate lại. |
+
+### Logic trong `app.c`
+
+**Định dạng gói tin** (Manufacturer Specific Data, company ID `0x0059`, 13 byte) — giữ y nguyên
+định dạng bản E73 (nRF52840) để app đọc beacon (`BeaconCode.ts`) không phải sửa gì:
+
+| Byte | Trường | Kiểu |
+|---|---|---|
+| 0 | magic `0xE7` | u8 |
+| 1 | version `0x01` | u8 |
+| 2–5 | hospitalCode | u32 BE |
+| 6 | buildingCode | u8 |
+| 7 | deptCode (khoa) | u8 |
+| 8 | floorCode | i8 |
+| 9–10 | idx (số thứ tự) | u16 BE |
+| 11 | txPower @1m (dBm, đã hiệu chuẩn = -69) | i8 |
+| 12 | battery % (0xFF = không rõ) | u8 |
+
+Tên thiết bị trong scan response: `E73-<hospitalCode>-B<buildingCode>-K<deptCode>-F<floorCode>-<idx>`
+(hàm `build_device_name()`).
+
+**Vòng đời quảng bá** (`setup_advertising()`, chạy lại mỗi khi boot hoặc mỗi khi ngắt kết nối):
+1. Set AD Flags (LE General Discoverable).
+2. Nhồi 13 byte Manufacturer Specific Data vào gói quảng bá chính.
+3. Nhồi tên thiết bị vào scan response.
+4. Ghi payload hiện hành vào characteristic `beacon_config` (để app đọc qua GATT nếu cần).
+5. Set interval = 320 × 0.625ms = 200ms → 5 lần/giây (`ADV_INTERVAL_UNITS`).
+6. Bắt đầu phát kiểu **connectable** (`sl_bt_legacy_advertiser_connectable`) — nhờ vậy sau mỗi
+   gói phát, radio tự mở cửa sổ nghe kết nối theo chuẩn BLE, không cần vòng quét riêng.
+
+**Sự kiện BLE xử lý trong `sl_bt_on_event()`**:
+- `system_boot`: set TX power (+4dBm, giới hạn -30dBm…+4dBm), tạo advertising set, gọi `setup_advertising()`.
+- `connection_opened`: đánh dấu `connected = true` — stack tự ngưng quảng bá khi có kết nối, beacon chỉ còn nhận dữ liệu (ghi config / OTA).
+- `connection_closed`: đánh dấu `connected = false`, gọi lại `setup_advertising()` để phát lại với payload hiện hành (áp dụng ID mới nếu vừa ghi qua BLE).
+- `gatt_server_attribute_value` (client ghi vào `beacon_config`): validate đúng 13 byte + magic/version, lưu vào biến `payload`, gọi `save_config()` (ghi NVM3). Nếu đang kết nối thì chờ đến lúc ngắt kết nối mới `setup_advertising()` lại (tránh đổi quảng bá giữa phiên BLE).
+
+**Lưu trữ cấu hình**: `load_config()` / `save_config()` dùng `nvm3_readData`/`nvm3_writeData` với
+key cố định `NVM3_KEY_CONFIG = 0x0001`. NVM3 nằm ở vùng flash riêng cuối bộ nhớ (`0x4C000`–`0x56000`,
+xem mục "Bố cục flash") nên **nạp lại app không xóa ID cũ** — muốn về ID `0000` phải xóa rõ vùng
+NVM3 (xem mục 6 / `flash-bt53.sh --reset-id`).
+
+### Công cụ đi kèm (`tools/`)
+
+- `make-config-payload.mjs` — sinh chuỗi hex 13 byte từ mã kiểu `79048-B04-K00-F01-0001` để ghi
+  vào characteristic `beacon_config` qua nRF Connect / Simplicity Connect.
+- `flash-bt53.sh` — script nạp 1 lệnh (tự tắt MPU trước khi nạp qua pyOCD). Hỗ trợ:
+  - (không cờ) nạp firmware beacon
+  - `--bootloader` nạp bootloader (chỉ 1 lần/module)
+  - `--reset-id` nạp firmware + xóa NVM3 → ID về `0000`
+
 ## 1. Thông số phần cứng
 
 | Mục | Giá trị |

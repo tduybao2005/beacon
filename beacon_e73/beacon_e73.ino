@@ -74,6 +74,9 @@ volatile bool connected = false;      // đang có kết nối (chế độ ch�
 volatile bool configDirty = false;    // config mới, áp dụng khi ngắt kết nối
 char deviceName[48];
 
+// ---------- TAM: cot moc debug doc qua SWD (se xoa sau khi xong) ----------
+volatile uint32_t dbgTrace[6] = {0x11111111, 0, 0, 0, 0, 0};
+
 // ---------- Lưu / đọc config từ internal flash ----------
 void loadConfig() {
   File f(InternalFS);
@@ -132,7 +135,9 @@ void setupAdvertising() {
   Bluefruit.Advertising.restartOnDisconnect(false); // tự quản lý trong callback
   Bluefruit.Advertising.setInterval(ADV_INTERVAL_UNITS, ADV_INTERVAL_UNITS); // 200ms -> 5 lan/giay
   Bluefruit.Advertising.setFastTimeout(0);
-  Bluefruit.Advertising.start(0); // 0 = khong timeout
+  bool advOk = Bluefruit.Advertising.start(0); // 0 = khong timeout
+  dbgTrace[2] = advOk ? 0x600D0002 : 0xBAD00002;
+  dbgTrace[3] = Bluefruit.Advertising.isRunning() ? 0x600D0003 : 0xBAD00003;
 
   Serial.print("[ADV] Phat 5 lan/giay: ");
   Serial.println(deviceName);
@@ -194,6 +199,7 @@ void setupConfigService() {
 }
 
 void setup() {
+  dbgTrace[0] = 0xCAFEBABE; // da vao setup()
   Serial.begin(115200);
   delay(500);
   Serial.println("=== Beacon E73 (nRF52840) - Hospital Wayfinding ===");
@@ -201,7 +207,8 @@ void setup() {
   InternalFS.begin();
   loadConfig();
 
-  Bluefruit.begin(1, 0); // 1 ket noi peripheral (DFU/config), 0 central
+  bool sdOk = Bluefruit.begin(1, 0); // 1 ket noi peripheral (DFU/config), 0 central
+  dbgTrace[1] = sdOk ? 0x600D0001 : 0xBAD00001;
   Bluefruit.setTxPower(4);
   Bluefruit.Periph.setConnectCallback(onConnect);
   Bluefruit.Periph.setDisconnectCallback(onDisconnect);
@@ -216,6 +223,8 @@ void setup() {
   setupAdvertising();
 
   Serial.println("[OK] Phat 5 lan/giay (connectable - san sang nhan ket noi nap code/ghi ID)");
+
+  dbgTrace[4] = 0xDEADBEEF; // da chay het setup()
 
   // Mọi việc đều chạy bằng callback của SoftDevice -> tạm dừng task loop
   // để CPU ngủ sâu tối đa, tiết kiệm pin.

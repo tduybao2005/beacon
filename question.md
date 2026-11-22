@@ -170,3 +170,69 @@ Lưu ý layout thêm:
 → **Chốt: 2×AA + đế pin (~35k), firmware hiện tại đã đạt yêu cầu 2–3 năm.**
 Nạp OTA, gán ID, đọc ID qua BLE hoạt động y nguyên. Muốn thêm biên thì hạ TX 0dBm (làm ngay
 được) và cân nhắc DC-DC (cần xác nhận cuộn cảm trong module trước).
+
+## Câu 3: Nên mua pin AA loại nào, mua ở shop nào tại TPHCM?
+
+### Loại pin — chọn theo ngân sách
+
+| Loại | Giá 2 viên | Thời lượng thực tế | Khi nào chọn |
+|---|---|---|---|
+| **Panasonic Alkaline AA (LR6)** | ~15–25k | ~2.5–3 năm | ✅ Mặc định — rẻ, nội trở thấp, đủ yêu cầu 2–3 năm |
+| **Energizer Ultimate Lithium AA (L91)** | ~70–90k | ~4–5+ năm, chịu nhiệt/lạnh tốt, gần như không tự xả, không rò rỉ hoá chất | Beacon dán chỗ khó thay pin, hoặc muốn dư biên an toàn nhiều hơn |
+
+Tránh pin Alkaline **không thương hiệu / trôi nổi** (hàng chợ không rõ nguồn gốc) — nội trở thường cao và không đồng đều giữa các viên, dễ gây sụt áp hơn dự tính dù cùng dán nhãn "AA 1.5V".
+
+**Khuyến nghị:** bắt đầu bằng **Panasonic Alkaline chính hãng** (rẻ, thừa yêu cầu 2–3 năm). Nếu vị trí lắp khó tiếp cận để thay pin sau này, nâng cấp lên **Energizer Ultimate Lithium L91** — vẫn nằm trong ngân sách 100k cho 2 viên.
+
+### Mua ở đâu (TPHCM)
+
+**Online — an toàn nhất để đảm bảo hàng chính hãng:**
+- **Shopee Mall / Tiki Trading / Lazada Mall** — tìm gian hàng chính hãng "Panasonic Vietnam" hoặc "Energizer" (có tick Mall, hoàn tiền nếu hàng giả, giao trong TPHCM 1–2 ngày hoặc nhanh 2h với Tiki).
+- **Pin Hồng Ngọc** (pinhongngoc.com) — chuyên bán pin, có cả Panasonic lẫn Energizer Ultimate Lithium, bán sỉ/lẻ, xuất VAT, có thể đặt giao tận nơi ở TPHCM.
+- **Pin Thành Nam** (pinthanhnam.com) — tương tự, đủ dòng Energizer Max/Ultimate Lithium.
+
+**Mua trực tiếp (xem hàng thật, lấy ngay):**
+- Siêu thị/cửa hàng tiện lợi (Bách Hóa Xanh, Co.opmart, AEON, WinMart) — thường có sẵn vỉ Panasonic/Energizer Alkaline thông dụng, tiện nếu cần mua ngay không cần hàng Lithium đặc chủng.
+- Chợ Nhật Tảo (Q10) hoặc các tiệm linh kiện điện tử — có bán pin nhưng nên hỏi kỹ nguồn gốc/hạn dùng, độ tin cậy thấp hơn shop chuyên pin hoặc Mall online.
+
+Lưu ý khi mua: kiểm tra hạn sử dụng in trên vỉ (Alkaline nên còn hạn > 3 năm để không mất thêm dung lượng do tự xả trước khi lắp), và mua đúng loại **Alkaline** (LR6) hoặc **Lithium** (L91) — tránh nhầm với pin **sạc NiMH** (eneloop, 1.2V) vì điện áp thấp hơn sẽ rút ngắn thời lượng beacon.
+
+Sources:
+- [Mua pin Energizer ở đâu TPHCM? Đặt hàng chính hãng, giao nhanh, có VAT](https://pinhongngoc.com/mua-pin-energizer-o-dau-tphcm-chinh-hang)
+- [Pin AA Energizer Chính Hãng (E91/L91/NH15E/EP91) Giá Tốt 2026](https://pinthanhnam.com/pin-aa-energizer)
+- [Pin Aa Energizer Ultimate Lithium, nơi bán giá rẻ, uy tín, chất lượng nhất | Websosanh](https://websosanh.vn/s/pin+aa+energizer+ultimate+lithium.htm)
+- [Mua Pin AA Alkaline Panasonic 1,5V - Hàng Chính Hãng | Tiki](https://tiki.vn/pin-aa-alkaline-panasonic-1-5v-hang-chinh-hang-p20578011.html)
+- [Mua pin ở đâu chính hãng? Địa chỉ mua pin AA, AAA, pin nút uy tín - Panasonic Việt Nam](https://www.panasonic.com/vn/consumer/batteries/dry-battery-learn/article/mua-pin-o-dau.html)
+- [PIN AA Panasonic chính hãng | Giá sỉ, hóa đơn VAT đầy đủ, Giao nhanh](https://pinhongngoc.com/pin-panasonic-aa)
+
+### Đính chính giá L91 theo shop (quan trọng)
+
+Giá L91 (vỉ 2 viên) **chênh lệch nhiều theo shop**, không cố định 70–90k như ước tính ban đầu:
+
+| Shop | Giá L91 (vỉ 2 viên) |
+|---|---|
+| nangluongvinhcuu.com | ~75.000đ |
+| **Pin Thành Nam** | **~150.000đ** (vượt ngân sách 100k nếu mua L91 ở đây) |
+
+→ Nếu mua Alkaline (E91/Max) ở Pin Thành Nam giá 40k thì vẫn tốt, cứ mua. Nếu muốn thử L91 mà giữ ngân sách ≤100k, nên xem ở nangluongvinhcuu.com hoặc Pin Hồng Ngọc thay vì mua L91 tại Pin Thành Nam.
+
+## Câu 4: So sánh Pin AA Energizer Max (E91 — Alkaline) và Lithium (L91)
+
+| Tiêu chí | **E91 (Alkaline)** | **L91 (Lithium)** |
+|---|---|---|
+| Điện áp danh định | 1.5V | 1.5V |
+| Dung lượng thực tế | ~2500–2850 mAh | ~2900–3000 mAh, nhưng đường xả **phẳng hơn nhiều** (giữ gần 1.5V lâu hơn rồi mới tụt, thay vì tụt dần đều như Alkaline) |
+| Nội trở | ~150–300 mΩ (tăng dần khi pin yếu/lạnh) | ~100–150 mΩ, **giữ thấp ổn định** kể cả khi lạnh — ít sụt áp khi radio phát xung đỉnh 10–16 mA |
+| Dải nhiệt độ hoạt động | -18°C đến 55°C | **-40°C đến 60°C** — chịu lạnh vượt trội |
+| Tự xả / hạn sử dụng | ~2–3%/năm, hạn dùng ~7–10 năm | gần như không tự xả, hạn dùng **~20 năm** |
+| Trọng lượng | ~23g/viên | ~15g/viên (nhẹ hơn ~35%) |
+| Rò rỉ hoá chất | có thể rò nếu để quá hạn/xả kiệt | **không rò** (thiết kế kín, an toàn hơn khi gắn lâu dài không kiểm tra) |
+| Giá tham khảo (vỉ 2 viên) | ~30–40k | ~75–150k tùy shop (xem bảng giá ở trên) |
+| Thời lượng ước tính cho beacon (~40–90 µA trung bình) | ~2.5–3 năm | ~4–5+ năm nhờ dung lượng cao hơn + đường xả phẳng |
+
+**Áp dụng cho beacon của t:**
+- Cả hai đều đủ nội trở thấp để không gây sụt áp/reset (khác hẳn pin cúc CR2477 nội trở cao) — đây không phải điểm phân biệt giữa 2 loại.
+- Khác biệt thực chất nằm ở: **(1) tuổi thọ lưu kho trước khi lắp** (L91 để được rất lâu trong kho mà không giảm dung lượng, hữu ích nếu mua sẵn số lượng lớn rồi lắp dần), **(2) chịu nhiệt** (nếu beacon đặt ở nơi nóng/lạnh bất thường — vd gần cửa ra vào, ngoài trời — L91 ổn định hơn), và **(3) đường xả phẳng** giúp điện áp beacon ổn định hơn suốt vòng đời pin thay vì yếu dần theo thời gian như Alkaline.
+- Với môi trường bệnh viện (trong nhà, nhiệt độ ổn định ~20–30°C), **Alkaline E91 là đủ dùng và hợp lý về giá** — không có nhu cầu thực sự cần chịu nhiệt độ khắc nghiệt. L91 đáng cân nhắc nếu: cần lưu kho pin lâu trước khi lắp, hoặc beacon đặt ở vị trí khó tiếp cận muốn kéo dài thời gian thay pin thêm 1–2 năm.
+
+**Kết luận:** giữ nguyên khuyến nghị Alkaline E91 (~40k) làm mặc định; L91 là lựa chọn nâng cấp không bắt buộc.
